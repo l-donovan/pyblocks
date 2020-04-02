@@ -1,10 +1,12 @@
+from .utils import listify
+
 class Block():
     def __init__(self):
         pass
 
 class Program():
     def __init__(self, root_block):
-        self.root_block = [root_block] if (type(root_block) not in [tuple, list]) else root_block
+        self.root_block = listify(root_block)
 
     def run(self):
         scope = {}
@@ -15,7 +17,7 @@ class ForLoop(Block):
     def __init__(self, iterator, iterable, body):
         self.iterator = iterator
         self.iterable = iterable
-        self.body = [body] if (type(body) not in [tuple, list]) else body
+        self.body = listify(body)
 
     def run(self, scope={}):
         for i in self.iterable:
@@ -27,7 +29,7 @@ class ForLoop(Block):
 class WhileLoop(Block):
     def __init__(self, condition, body):
         self.condition = condition
-        self.body = [body] if (type(body) not in [tuple, list]) else body
+        self.body = listify(body)
 
     def run(self, scope={}):
         while (True):
@@ -69,10 +71,44 @@ class Print(Block):
 
         return scope, None
 
+class Compare(Block):
+    def __init__(self, operator, value1, value2):
+        self.operator = operator
+        self.value1 = value1
+        self.value2 = value2
+
+    def run(self, scope={}):
+        scope, v1 = self.value1.run(scope)
+
+        if (type(v1) is Literal):
+            scope, v1 = v1.run(scope)
+
+        scope, v2 = self.value2.run(scope)
+
+        if (type(v2) is Literal):
+            scope, v2 = v2.run(scope)
+
+        if (self.operator == '=='):
+            result = v1 == v2
+        elif (self.operator == '!='):
+            result = v1 != v2
+        elif (self.operator == '>'):
+            result = v1 > v2
+        elif (self.operator == '>='):
+            result = v1 >= v2
+        elif (self.operator == '<'):
+            result = v1 < v2
+        elif (self.operator == '<='):
+            result = v1 <= v2
+        else:
+            result = None
+
+        return scope, result
+
 class If(Block):
     def __init__(self, condition, body):
         self.condition = condition
-        self.body = [body] if (type(body) not in [tuple, list]) else body
+        self.body = listify(body)
 
     def run(self, scope={}):
         scope, outcome = self.condition.run(scope)
@@ -83,7 +119,7 @@ class If(Block):
 
 class Else(Block):
     def __init__(self, body):
-        self.body = [body] if (type(body) not in [tuple, list]) else body
+        self.body = listify(body)
 
     def run(self, scope={}):
         for item in self.body:
@@ -157,7 +193,7 @@ class Function(Block):
     def __init__(self, name, arg_names, body):
         self.name = name
         self.arg_names = arg_names
-        self.body = [body] if (type(body) not in [tuple, list]) else body
+        self.body = listify(body)
 
     def run(self, scope={}):
         scope[self.name] = FunctionHelper(self.arg_names, self.body)
@@ -166,7 +202,7 @@ class Function(Block):
 class Call(Block):
     def __init__(self, fn_name, args):
         self.fn_name = fn_name
-        self.args = [args] if (type(args) not in [tuple, list]) else args
+        self.args = listify(args)
 
     def run(self, scope={}):
         fn = scope[self.fn_name]

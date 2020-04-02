@@ -38,5 +38,15 @@ def main():
         Print(Literal('\n'))
     ]).run()
 
+    print('Program5')
+    Program([
+        Set('n', Literal(0)),
+        WhileLoop(Compare('<', Get('n'), Literal(10)), [
+            Print(Get('n')),
+            Print(Literal('\n')),
+            Set('n', Math('+', [Get('n'), Literal(2)]))
+        ])
+    ]).run()
+
 if (__name__ == '__main__'):
     main()
